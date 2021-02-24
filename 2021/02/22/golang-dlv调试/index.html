@@ -33,15 +33,15 @@
 
     <!-- OpenGraph -->
  
-    <meta name="description" content="以一个死锁案例为例 Example Codes1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859package mainimport (	&quot;fmt&quot;	&quot;log&quot;	&quot;sync&amp;quot">
+    <meta name="description" content="用例1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859&#x2F;&#x2F; 以定位一个发生死锁的程序为例,展示使用dlv调试使用流程package mainimport (	&quot;fmt&quot;	&quot;log&quot;	&amp;quot">
 <meta property="og:type" content="article">
 <meta property="og:title" content="golang dlv调试">
 <meta property="og:url" content="http://example.com/2021/02/22/golang-dlv%E8%B0%83%E8%AF%95/index.html">
 <meta property="og:site_name" content="望星阁">
-<meta property="og:description" content="以一个死锁案例为例 Example Codes1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859package mainimport (	&quot;fmt&quot;	&quot;log&quot;	&quot;sync&amp;quot">
+<meta property="og:description" content="用例1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859&#x2F;&#x2F; 以定位一个发生死锁的程序为例,展示使用dlv调试使用流程package mainimport (	&quot;fmt&quot;	&quot;log&quot;	&amp;quot">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-02-22T12:52:00.482Z">
-<meta property="article:modified_time" content="2021-02-22T16:27:35.537Z">
+<meta property="article:modified_time" content="2021-02-24T16:36:00.951Z">
 <meta property="article:author" content="星蒴">
 <meta name="twitter:card" content="summary_large_image">
 
@@ -72,7 +72,7 @@
             <header class="header">
     <div class="header__left">
         <a href="/" class="button">
-            <span class="logo__text">阿湖小筑</span>
+            <span class="logo__text">湖心小筑</span>
         </a>
     </div>
     <div class="header__right">
@@ -138,15 +138,151 @@
 <article class="post content-card">
     <div class="post__header"></div>
     <div class="post__content">
-        <p>以一个死锁案例为例</p>
-<h3 id="Example-Codes"><a href="#Example-Codes" class="headerlink" title="Example Codes"></a>Example Codes</h3><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;log&quot;</span></span><br><span class="line">	<span class="string">&quot;sync&quot;</span></span><br><span class="line">	<span class="string">&quot;time&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> ID <span class="keyword">struct</span> &#123;</span><br><span class="line">	id <span class="keyword">int</span></span><br><span class="line">	token <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> IDStorage <span class="keyword">struct</span> &#123;</span><br><span class="line">	name    <span class="keyword">string</span></span><br><span class="line">	storage <span class="keyword">map</span>[<span class="keyword">int</span>]*ID</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *IDStorage)</span> <span class="title">push</span><span class="params">(id <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	s.storage[id] = &amp;ID&#123;</span><br><span class="line">		id:    id,</span><br><span class="line">		token: fmt.Sprintf(<span class="string">&quot;id:%s&quot;</span>,id),</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	reqCh := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span> &#123;&#125;)</span><br><span class="line">	rspCh := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span> &#123;&#125;)</span><br><span class="line">	quitCh := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span> &#123;&#125;)</span><br><span class="line">	<span class="keyword">var</span> lock sync.RWMutex</span><br><span class="line"></span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		&lt;- reqCh</span><br><span class="line">		lock.RLock()</span><br><span class="line">		rspCh &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">		lock.RUnlock()</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		lock.Lock()</span><br><span class="line">		reqCh &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">		&lt;- rspCh</span><br><span class="line">		lock.Unlock()</span><br><span class="line">		quitCh &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	ticker := time.NewTicker(<span class="number">2</span> * time.Second)</span><br><span class="line">	ids := &amp;IDStorage&#123;name:<span class="string">&quot;storage&quot;</span>, storage:<span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">int</span>]*ID)&#125;</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		i := <span class="number">1</span></span><br><span class="line">		<span class="keyword">for</span> <span class="keyword">range</span> ticker.C &#123;</span><br><span class="line">			ids.push(i)</span><br><span class="line">			i++</span><br><span class="line">			log.Printf(<span class="string">&quot;keep alive tick %d.&quot;</span>, <span class="built_in">len</span>(ids.storage))</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	&lt;- quitCh</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+        <h3 id="用例"><a href="#用例" class="headerlink" title="用例"></a>用例</h3><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 以定位一个发生死锁的程序为例,展示使用dlv调试使用流程</span></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;log&quot;</span></span><br><span class="line">	<span class="string">&quot;sync&quot;</span></span><br><span class="line">	<span class="string">&quot;time&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> ID <span class="keyword">struct</span> &#123;</span><br><span class="line">	id <span class="keyword">int</span></span><br><span class="line">	token <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> IDStorage <span class="keyword">struct</span> &#123;</span><br><span class="line">	name    <span class="keyword">string</span></span><br><span class="line">	storage <span class="keyword">map</span>[<span class="keyword">int</span>]*ID</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *IDStorage)</span> <span class="title">push</span><span class="params">(id <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	s.storage[id] = &amp;ID&#123;</span><br><span class="line">		id:    id,</span><br><span class="line">		token: fmt.Sprintf(<span class="string">&quot;id:%d&quot;</span>,id),</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	reqCh := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span> &#123;&#125;)</span><br><span class="line">	rspCh := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span> &#123;&#125;)</span><br><span class="line">	quitCh := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span> &#123;&#125;)</span><br><span class="line">	<span class="keyword">var</span> lock sync.RWMutex</span><br><span class="line"></span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		&lt;- reqCh</span><br><span class="line">		lock.RLock()</span><br><span class="line">		rspCh &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">		lock.RUnlock()</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		lock.Lock()</span><br><span class="line">		reqCh &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">		&lt;- rspCh</span><br><span class="line">		lock.Unlock()</span><br><span class="line">		quitCh &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	ticker := time.NewTicker(<span class="number">2</span> * time.Second)</span><br><span class="line">	ids := &amp;IDStorage&#123;name:<span class="string">&quot;storage&quot;</span>, storage:<span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">int</span>]*ID)&#125;</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		i := <span class="number">1</span></span><br><span class="line">		<span class="keyword">for</span> <span class="keyword">range</span> ticker.C &#123;</span><br><span class="line">			ids.push(i)</span><br><span class="line">			i++</span><br><span class="line">			log.Printf(<span class="string">&quot;keep alive tick %d.&quot;</span>, <span class="built_in">len</span>(ids.storage))</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	&lt;- quitCh</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h3 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go build -gcflags &#39;-N -l&#39;</span><br></pre></td></tr></table></figure>
+<h3 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h3><pre><code>   go build -gcflags &#39;-N -l&#39;
+</code></pre>
+<h3 id="dlv调试流程"><a href="#dlv调试流程" class="headerlink" title="dlv调试流程"></a>dlv调试流程</h3><pre><code>1. 找出启动进程pid
+2. dlv attach pid
+3. grs查看所有goroutines
+   (dlv) grs
+   Goroutine 1 - User: /root/mycodes/leetcode/testdlv.go:57 main.main (0x49d71f)
+   Goroutine 2 - User: /usr/lib/golang/src/runtime/proc.go:305 runtime.gopark (0x431de0)
+   Goroutine 3 - User: /usr/lib/golang/src/runtime/proc.go:305 runtime.gopark (0x431de0)
+   Goroutine 4 - User: /usr/lib/golang/src/runtime/proc.go:305 runtime.gopark (0x431de0)
+   Goroutine 5 - User: /usr/lib/golang/src/runtime/proc.go:305 runtime.gopark (0x431de0)
+   Goroutine 6 - User: /usr/lib/golang/src/runtime/sema.go:71 sync.runtime_SemacquireMutex (0x4403a7)
+   Goroutine 7 - User: /root/mycodes/leetcode/testdlv.go:42 main.main.func2 (0x49d853)
+   Goroutine 8 - User: /root/mycodes/leetcode/testdlv.go:51 main.main.func3 (0x49d91e)
 
-<h3 id="dlv调试流程"><a href="#dlv调试流程" class="headerlink" title="dlv调试流程"></a>dlv调试流程</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">To be continued</span><br></pre></td></tr></table></figure>
+
+   根据每个协程的行号提示，可以看出goroutine 1就是执行main函数的协程，
+   goroutine 7 是执行lock.Lock()的协程
+   goroutine 8 是执行tick定期打印的协程
+   goroutine 6 虽然无法直接看出与执行lock.RLock()有关联，但排除了2、3、4、5这4个golang系统调度的协程，也可以推测出. 实际上6正是一直等待锁的协程，我们可以切换到6号协程验证下:
+   (dlv) gr 6
+    Switched from 1 to 6 (thread 7936)
+   (dlv) bt
+    0  0x0000000000431de0 in runtime.gopark
+       at /usr/lib/golang/src/runtime/proc.go:305
+    1  0x0000000000440640 in runtime.goparkunlock
+       at /usr/lib/golang/src/runtime/proc.go:310
+    2  0x0000000000440640 in runtime.semacquire1
+       at /usr/lib/golang/src/runtime/sema.go:144
+    3  0x00000000004403a7 in sync.runtime_SemacquireMutex
+       at /usr/lib/golang/src/runtime/sema.go:71
+    4  0x000000000046cce7 in sync.(*RWMutex).RLock
+       at /usr/lib/golang/src/sync/rwmutex.go:50
+    5  0x000000000049d7a7 in main.main.func1
+       at /root/mycodes/leetcode/testdlv.go:35
+    6  0x000000000045c1c1 in runtime.goexit
+       at /usr/lib/golang/src/runtime/asm_amd64.s:1373
+    通过栈帧调用可以看出正是goroutine 6发生了死锁等待.
+
+
+    这里总结一个经验: 一旦程序长时间阻塞，并且cpu负载很低，大概率是发生了死锁，
+    这时只要查看所有的协程中是否有处于调用sync.runtime_SemacquireMutex阻塞的(sync.Mutex底层是通过信号量实现)
+    实际上这个用例中最后一个定期tick的协程是故意加上去的，因为一旦所有协程都阻塞，
+    golang会自动检测出死锁.
+
+
+    现在切回执行main函数的协程:
+    (dlv) gr 1
+    Switched from 6 to 1 (thread 7936)
+    (dlv) bt
+    0  0x0000000000431de0 in runtime.gopark
+       at /usr/lib/golang/src/runtime/proc.go:305
+    1  0x0000000000405557 in runtime.chanrecv
+       at /usr/lib/golang/src/runtime/chan.go:525
+    2  0x000000000040521b in runtime.chanrecv1
+       at /usr/lib/golang/src/runtime/chan.go:407
+    3  0x000000000049d71f in main.main
+       at /root/mycodes/leetcode/testdlv.go:57
+    4  0x0000000000431a12 in runtime.main
+       at /usr/lib/golang/src/runtime/proc.go:203
+    5  0x000000000045c1c1 in runtime.goexit
+       at /usr/lib/golang/src/runtime/asm_amd64.s:1373
+    (dlv) locals
+    mp = (unreadable could not find loclist entry at 0x39948 for address 0x431de0)
+    gp = (unreadable could not find loclist entry at 0x3997b for address 0x431de0)
+    status = (unreadable could not find loclist entry at 0x399ae for address 0x431de0)
+    观察到&lt;- quitCh在源文件57行，处于3层栈帧，切换验证下
+    (dlv) frame 3
+    &gt; runtime.gopark() /usr/lib/golang/src/runtime/proc.go:305 (PC: 0x431de0)
+    Warning: debugging optimized function
+    Frame 3: /root/mycodes/leetcode/testdlv.go:57 (PC: 49d71f)
+        52:                ids.push(i)
+        53:                i++
+        54:                log.Printf(&quot;keep alive tick %d.&quot;, len(ids.storage))
+        55:            &#125;
+        56:        &#125;()
+    =&gt;  57:        &lt;- quitCh
+        58:    &#125;
+    查看main函数所有栈上变量
+    (dlv) locals
+    reqCh = chan struct &#123;&#125; 0/0
+    rspCh = chan struct &#123;&#125; 0/0
+    quitCh = chan struct &#123;&#125; 0/0
+    lock = sync.RWMutex &#123;w: (*sync.Mutex)(0xc000014100), writerSem: 0, readerSem: 0,...+2 more&#125;
+    ticker = (*time.Ticker)(0xc0000620a0)
+    ids = (*main.IDStorage)(0xc00000c080)
+    具体看下ids这个变量的结构
+    (dlv) p ids
+    *main.IDStorage &#123;
+        name: &quot;storage&quot;,
+        storage: map[int]*main.ID [
+            1: *(*main.ID)(0xc000108000), 
+            2: *(*main.ID)(0xc000108020), 
+            3: *(*main.ID)(0xc000108040), 
+            4: *(*main.ID)(0xc000108060), 
+            5: *(*main.ID)(0xc000108080), 
+        ],&#125;
+    (dlv) p ids.storage[1]
+    *main.ID &#123;id: 1, token: &quot;id:1&quot;&#125;
+    (dlv) p ids.storage[2]
+    *main.ID &#123;id: 2, token: &quot;id:2&quot;&#125;
+    上面通过locals查看到的ids = (*main.IDStorage)(0xc00000c080)其实是ids这个指针变量的内容，即分配的main.IDStorage内存块的首地址
+    我们来验证下:
+    (dlv) p &amp;ids.name
+    (*string)(0xc00000c080)
+    可以看到这2个值都是0xc00000c080，因此结论是正确的
+    ps: 有些时候locals或者vars看不到某些指针变量存储内存的实际地址，
+        通过p &amp;xxx.first_field_name是一种方式.
+    
+
+    有时想查看某个goroutine的堆栈或具体内容，又不想切来切去可以这样(以7号协程为例):
+    (dlv) gr 7 bt
+    0  0x0000000000431de0 in runtime.gopark
+       at /usr/lib/golang/src/runtime/proc.go:305
+    1  0x0000000000405557 in runtime.chanrecv
+       at /usr/lib/golang/src/runtime/chan.go:525
+    2  0x000000000040521b in runtime.chanrecv1
+       at /usr/lib/golang/src/runtime/chan.go:407
+    3  0x000000000049d853 in main.main.func2
+       at /root/mycodes/leetcode/testdlv.go:42
+    4  0x000000000045c1c1 in runtime.goexit
+       at /usr/lib/golang/src/runtime/asm_amd64.s:1373
+    (dlv) gr 7 frame 3
+    &gt; runtime.gopark() /usr/lib/golang/src/runtime/proc.go:305 (PC: 0x431de0)
+    Warning: debugging optimized function
+    Frame 3: /root/mycodes/leetcode/testdlv.go:42 (PC: 49d853)
+        37:            lock.RUnlock()
+        38:        &#125;()
+        39:        go func() &#123;
+        40:            lock.Lock()
+        41:            reqCh &lt;- struct&#123;&#125;&#123;&#125;
+    =&gt;  42:            &lt;- rspCh
+        43:            lock.Unlock()
+        44:            quitCh &lt;- struct&#123;&#125;&#123;&#125;
+        45:        &#125;()
+        46:    
+        47:        ticker := time.NewTicker(2 * time.Second)
+    这样选择的协程则不会发生切换.
+</code></pre>
+
     </div>
      
-    <div class="post-footer__meta"><p>updated at 2021-02-23</p></div> 
+    <div class="post-footer__meta"><p>updated at 2021-02-25</p></div> 
     <div class="post-meta__cats"></div> 
 </article>
 
